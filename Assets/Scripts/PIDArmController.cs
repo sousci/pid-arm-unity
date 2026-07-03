@@ -10,16 +10,18 @@ public sealed class PIDArmController : MonoBehaviour
     public const float DefaultTargetAngle = 30f;
     public const float DefaultArmLength = 2f;
     public const float DefaultArmMass = 1f;
-    public const float MaxTorque = 100f;
+    public const float DefaultMaxTorque = 100f;
 
     const float ArmWidth = 0.18f;
     const float IntegralLimit = 25f;
     const float ConvergedErrorDegrees = 1f;
     const float ConvergedAngularVelocity = 2f;
     const float ConvergedHoldSeconds = 0.5f;
+    const float OvershootThresholdDegrees = 0.5f;
     const int MaxTrailPoints = 420;
     const float GraphDurationSeconds = 10f;
-    const float GraphAngleRange = 90f;
+    const float GraphMinAngle = 0f;
+    const float GraphMaxAngle = 180f;
     const float GraphSampleInterval = 0.04f;
 
     Rigidbody2D armBody;
@@ -49,6 +51,7 @@ public sealed class PIDArmController : MonoBehaviour
     Text dGainText;
     Text armLengthText;
     Text armMassText;
+    Text maxTorqueText;
     Text convergenceText;
     Text overshootText;
 
@@ -61,8 +64,10 @@ public sealed class PIDArmController : MonoBehaviour
     float targetAngle = DefaultTargetAngle;
     float armLength = DefaultArmLength;
     float armMass = DefaultArmMass;
+    float maxTorque = DefaultMaxTorque;
 
     bool controlEnabled;
+    bool hasConverged;
     float integral;
     float previousError;
     float outputTorque;
@@ -71,6 +76,8 @@ public sealed class PIDArmController : MonoBehaviour
     float dTerm;
     float stableTime;
     float overshoot;
+    float simulationStartTime;
+    float convergenceTime = -1f;
     float graphStartTime;
     float lastGraphSampleTime;
 
@@ -101,6 +108,7 @@ public sealed class PIDArmController : MonoBehaviour
         Text dGainValue,
         Text armLengthValue,
         Text armMassValue,
+        Text maxTorqueValue,
         Text convergence,
         Text overshootValue)
     {
@@ -131,6 +139,7 @@ public sealed class PIDArmController : MonoBehaviour
         dGainText = dGainValue;
         armLengthText = armLengthValue;
         armMassText = armMassValue;
+        maxTorqueText = maxTorqueValue;
         convergenceText = convergence;
         overshootText = overshootValue;
 
@@ -152,6 +161,9 @@ public sealed class PIDArmController : MonoBehaviour
         if (controlEnabled)
         {
             ApplyPidTorque(error);
+            UpdateConvergence(error);
+            UpdateOvershoot(currentAngle);
+            RecordAngleSample(currentAngle);
         }
         else
         {
@@ -160,11 +172,8 @@ public sealed class PIDArmController : MonoBehaviour
             pTerm = pGain * error;
             iTerm = iGain * integral;
             dTerm = 0f;
+            stableTime = 0f;
         }
-
-        UpdateConvergence(error);
-        UpdateOvershoot(currentAngle);
-        RecordAngleSample(currentAngle);
     }
 
     void Update()
@@ -185,6 +194,9 @@ public sealed class PIDArmController : MonoBehaviour
         previousError = Mathf.DeltaAngle(GetCurrentAngle(), targetAngle);
         stableTime = 0f;
         overshoot = 0f;
+        hasConverged = false;
+        simulationStartTime = Time.time;
+        convergenceTime = -1f;
         graphStartTime = Time.time;
         lastGraphSampleTime = -GraphSampleInterval;
         angleSamples.Clear();
@@ -201,6 +213,9 @@ public sealed class PIDArmController : MonoBehaviour
         dTerm = 0f;
         stableTime = 0f;
         overshoot = 0f;
+        hasConverged = false;
+        simulationStartTime = Time.time;
+        convergenceTime = -1f;
         graphStartTime = Time.time;
         lastGraphSampleTime = -GraphSampleInterval;
         trailPoints.Clear();
@@ -238,6 +253,8 @@ public sealed class PIDArmController : MonoBehaviour
         targetAngle = value;
         stableTime = 0f;
         overshoot = 0f;
+        hasConverged = false;
+        convergenceTime = -1f;
     }
 
     public void SetArmLength(float value)
@@ -256,6 +273,11 @@ public sealed class PIDArmController : MonoBehaviour
         }
     }
 
+    public void SetMaxTorque(float value)
+    {
+        maxTorque = value;
+    }
+
     void ApplyPidTorque(float error)
     {
         float dt = Time.fixedDeltaTime;
@@ -268,7 +290,7 @@ public sealed class PIDArmController : MonoBehaviour
         iTerm = iGain * integral;
         dTerm = dGain * derivative;
 
-        outputTorque = Mathf.Clamp(pTerm + iTerm + dTerm, -MaxTorque, MaxTorque);
+        outputTorque = Mathf.Clamp(pTerm + iTerm + dTerm, -maxTorque, maxTorque);
         armBody.AddTorque(outputTorque, ForceMode2D.Force);
 
         previousError = error;
@@ -309,6 +331,12 @@ public sealed class PIDArmController : MonoBehaviour
             Mathf.Abs(armBody.angularVelocity) <= ConvergedAngularVelocity;
 
         stableTime = closeEnough ? stableTime + Time.fixedDeltaTime : 0f;
+
+        if (!hasConverged && stableTime >= ConvergedHoldSeconds)
+        {
+            hasConverged = true;
+            convergenceTime = Time.time - simulationStartTime;
+        }
     }
 
     void UpdateOvershoot(float currentAngle)
@@ -359,8 +387,9 @@ public sealed class PIDArmController : MonoBehaviour
         SetText(dGainText, $"D gain: {dGain:0.0}");
         SetText(armLengthText, $"Arm length: {armLength:0.00} m");
         SetText(armMassText, $"Arm mass: {armMass:0.00} kg");
-        SetText(overshootText, $"Overshoot: {Mathf.Max(0f, overshoot):0.0} deg");
-        SetText(convergenceText, stableTime >= ConvergedHoldSeconds ? "State: \u53ce\u675f" : "State: \u672a\u53ce\u675f");
+        SetText(maxTorqueText, $"Max torque: {maxTorque:0}");
+        SetText(overshootText, GetOvershootText());
+        SetText(convergenceText, GetConvergenceText());
     }
 
     float GetCurrentAngle()
@@ -418,7 +447,7 @@ public sealed class PIDArmController : MonoBehaviour
         }
 
         lastGraphSampleTime = elapsed;
-        angleSamples.Add(new Vector2(elapsed, currentAngle));
+        angleSamples.Add(new Vector2(elapsed, Mathf.Clamp(currentAngle, GraphMinAngle, GraphMaxAngle)));
 
         float cutoff = elapsed - GraphDurationSeconds;
         while (angleSamples.Count > 0 && angleSamples[0].x < cutoff)
@@ -477,8 +506,28 @@ public sealed class PIDArmController : MonoBehaviour
 
     float MapGraphY(float angle)
     {
-        float normalizedAngle = Mathf.InverseLerp(-GraphAngleRange, GraphAngleRange, Mathf.Clamp(angle, -GraphAngleRange, GraphAngleRange));
+        float normalizedAngle = Mathf.InverseLerp(GraphMinAngle, GraphMaxAngle, Mathf.Clamp(angle, GraphMinAngle, GraphMaxAngle));
         return graphOrigin.y + normalizedAngle * graphSize.y;
+    }
+
+    string GetConvergenceText()
+    {
+        if (hasConverged)
+        {
+            return $"State: \u53ce\u675f ({convergenceTime:0.00} s)";
+        }
+
+        return "State: \u672a\u53ce\u675f";
+    }
+
+    string GetOvershootText()
+    {
+        if (overshoot > OvershootThresholdDegrees)
+        {
+            return $"Overshoot: yes ({overshoot:0.0} deg)";
+        }
+
+        return "Overshoot: none";
     }
 
     static void SetLine(LineRenderer line, Vector3 start, Vector3 end)

@@ -129,6 +129,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
             ui.DGain,
             ui.ArmLength,
             ui.ArmMass,
+            ui.MaxTorque,
             ui.Convergence,
             ui.Overshoot);
 
@@ -230,9 +231,10 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         ui.PSlider = AddSliderRow(panel.transform, "P gain", 0f, 100f, PIDArmController.DefaultPGain, out ui.PGain);
         ui.ISlider = AddSliderRow(panel.transform, "I gain", 0f, 20f, PIDArmController.DefaultIGain, out ui.IGain);
         ui.DSlider = AddSliderRow(panel.transform, "D gain", 0f, 30f, PIDArmController.DefaultDGain, out ui.DGain);
-        ui.TargetSlider = AddSliderRow(panel.transform, "Target angle", -90f, 90f, PIDArmController.DefaultTargetAngle, out ui.TargetAngle);
+        ui.TargetSlider = AddSliderRow(panel.transform, "Target angle", 0f, 180f, PIDArmController.DefaultTargetAngle, out ui.TargetAngle);
         ui.LengthSlider = AddSliderRow(panel.transform, "Arm length", 0.5f, 4f, PIDArmController.DefaultArmLength, out ui.ArmLength);
         ui.MassSlider = AddSliderRow(panel.transform, "Arm mass", 0.1f, 5f, PIDArmController.DefaultArmMass, out ui.ArmMass);
+        ui.MaxTorqueSlider = AddSliderRow(panel.transform, "Max torque", 10f, 300f, PIDArmController.DefaultMaxTorque, out ui.MaxTorque);
 
         GameObject buttonRow = CreateHorizontalRow("Button Row", panel.transform, 40f);
         ui.StartButton = AddButton(buttonRow.transform, "Start");
@@ -245,7 +247,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         ui.PTerm = AddReadout(panel.transform, "P term       : 0.0");
         ui.ITerm = AddReadout(panel.transform, "I term       : 0.0");
         ui.DTerm = AddReadout(panel.transform, "D term       : 0.0");
-        ui.Overshoot = AddReadout(panel.transform, "Overshoot: 0.0 deg");
+        ui.Overshoot = AddReadout(panel.transform, "Overshoot: none");
         ui.Convergence = AddReadout(panel.transform, "State: \u672a\u53ce\u675f");
 
         return ui;
@@ -259,6 +261,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         ui.TargetSlider.onValueChanged.AddListener(controller.SetTargetAngle);
         ui.LengthSlider.onValueChanged.AddListener(controller.SetArmLength);
         ui.MassSlider.onValueChanged.AddListener(controller.SetArmMass);
+        ui.MaxTorqueSlider.onValueChanged.AddListener(controller.SetMaxTorque);
         ui.StartButton.onClick.AddListener(controller.StartControl);
         ui.ResetButton.onClick.AddListener(controller.ResetSimulation);
 
@@ -268,6 +271,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         controller.SetTargetAngle(ui.TargetSlider.value);
         controller.SetArmLength(ui.LengthSlider.value);
         controller.SetArmMass(ui.MassSlider.value);
+        controller.SetMaxTorque(ui.MaxTorqueSlider.value);
     }
 
     void CreateBackgroundGuides()
@@ -286,7 +290,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         }
 
         Vector3 pivot = new Vector3(PivotX, PivotY, 0f);
-        for (int angle = -90; angle <= 90; angle += 15)
+        for (int angle = 0; angle <= 180; angle += 15)
         {
             float radians = angle * Mathf.Deg2Rad;
             Vector3 direction = new Vector3(Mathf.Sin(radians), -Mathf.Cos(radians), 0f);
@@ -304,9 +308,9 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
     {
         CreateGraphFrame();
         CreateWorldLabel("Angle Graph Label", "Angle vs Time", GraphOrigin + new Vector3(0f, GraphSize.y + 0.14f, 0f), 0.16f, TextAnchor.LowerLeft);
-        CreateWorldLabel("Graph Top Label", "+90 deg", GraphOrigin + new Vector3(-0.48f, GraphSize.y - 0.04f, 0f), 0.11f, TextAnchor.MiddleLeft);
-        CreateWorldLabel("Graph Zero Label", "0", GraphOrigin + new Vector3(-0.22f, GraphSize.y * 0.5f - 0.03f, 0f), 0.11f, TextAnchor.MiddleLeft);
-        CreateWorldLabel("Graph Bottom Label", "-90 deg", GraphOrigin + new Vector3(-0.52f, -0.04f, 0f), 0.11f, TextAnchor.MiddleLeft);
+        CreateWorldLabel("Graph Top Label", "180 deg", GraphOrigin + new Vector3(-0.52f, GraphSize.y - 0.04f, 0f), 0.11f, TextAnchor.MiddleLeft);
+        CreateWorldLabel("Graph Mid Label", "90 deg", GraphOrigin + new Vector3(-0.45f, GraphSize.y * 0.5f - 0.03f, 0f), 0.11f, TextAnchor.MiddleLeft);
+        CreateWorldLabel("Graph Bottom Label", "0 deg", GraphOrigin + new Vector3(-0.42f, -0.04f, 0f), 0.11f, TextAnchor.MiddleLeft);
         CreateWorldLabel("Graph Time Label", "latest 10 s", GraphOrigin + new Vector3(GraphSize.x - 0.8f, -0.24f, 0f), 0.11f, TextAnchor.MiddleLeft);
 
         targetGraphLine = CreateLine("Target Angle Graph Line", TargetColor, 0.025f, 6);
@@ -556,6 +560,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         public Slider TargetSlider;
         public Slider LengthSlider;
         public Slider MassSlider;
+        public Slider MaxTorqueSlider;
         public Button StartButton;
         public Button ResetButton;
         public Text CurrentAngle;
@@ -570,6 +575,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         public Text DGain;
         public Text ArmLength;
         public Text ArmMass;
+        public Text MaxTorque;
         public Text Convergence;
         public Text Overshoot;
     }
