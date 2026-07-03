@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1188" height="749" viewBox="0 0 1188 749" role="img" aria-labelledby="title desc">
+  <title id="title">PID Pendulum Arm simulation screenshot</title>
+  <desc id="desc">Unity game view showing a PID controlled pendulum arm, control sliders, response metrics, and an angle versus time graph.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#536e99"/>
+      <stop offset="0.47" stop-color="#a8cef0"/>
+      <stop offset="0.53" stop-color="#e6ffff"/>
+      <stop offset="0.58" stop-color="#77746b"/>
+      <stop offset="1" stop-color="#68625d"/>
+    </linearGradient>
+    <style>
+      .uiText{font-family:Arial,Helvetica,sans-serif;fill:#222;font-size:12px}
+      .small{font-size:11px}
+      .label{font-size:18px;font-weight:700}
+      .buttonText{fill:#fff;font-size:14px;font-weight:700}
+      .grid{stroke:#4d607d;stroke-width:1;opacity:.22}
+      .graphGrid{stroke:#222;stroke-width:1;opacity:.25}
+    </style>
+  </defs>
+
+  <rect width="1188" height="749" fill="#202020"/>
+  <rect x="0" y="0" width="1188" height="30" fill="#171717"/>
+  <rect x="0" y="30" width="1188" height="28" fill="#2e2e2e"/>
+  <text x="9" y="21" fill="#9b9b9b" font-family="Arial" font-size="14"># Scene</text>
+  <rect x="92" y="0" width="94" height="30" fill="#303030"/>
+  <text x="105" y="21" fill="#d0d0d0" font-family="Arial" font-size="14">Game</text>
+  <text x="2" y="49" fill="#a5a5a5" font-family="Arial" font-size="16">Game</text>
+  <text x="122" y="49" fill="#aaa" font-family="Arial" font-size="16">Display 1</text>
+  <text x="220" y="49" fill="#aaa" font-family="Arial" font-size="16">Free Aspect</text>
+  <text x="666" y="49" fill="#aaa" font-family="Arial" font-size="16">1x</text>
+  <text x="1110" y="49" fill="#aaa" font-family="Arial" font-size="16">Gizmos</text>
+
+  <rect x="0" y="58" width="857" height="691" fill="url(#sky)"/>
+  <rect x="857" y="58" width="331" height="691" fill="#f2f4f6"/>
+
+  <g>
+    <path class="grid" d="M97 75v663M181 75v663M263 75v663M346 75v663M429 75v663M512 75v663M595 75v663M678 75v663M761 75v663"/>
+    <path class="grid" d="M129 239h707M129 322h707M129 405h707M129 488h707M129 571h707M129 654h707"/>
+  </g>
+
+  <g opacity=".22" stroke="#253245" stroke-width="1.5">
+    <path d="M590 88l12-20M627 119l16-15M659 164l20-17M681 205l12-3M686 256h24M680 307l12 3M661 354l19 11M627 397l10 11"/>
+  </g>
+
+  <line x1="491" y1="256" x2="491" y2="474" stroke="#202b3d" stroke-width="3" opacity=".22"/>
+  <circle cx="491" cy="256" r="8.5" fill="#151c2a"/>
+  <line x1="491" y1="256" x2="575" y2="400" stroke="#2459bf" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="575" cy="400" r="6.5" fill="#e02a35"/>
+  <line x1="575" y1="400" x2="600" y2="382" stroke="#f02f40" stroke-width="3"/>
+  <line x1="575" y1="400" x2="587" y2="432" stroke="#229b59" stroke-width="3"/>
+  <path d="M491 422 C520 422,546 416,575 400" fill="none" stroke="#e22c38" stroke-width="3"/>
+
+  <g transform="translate(176 563)">
+    <text x="0" y="-13" class="uiText label" opacity=".75">Angle vs Time</text>
+    <rect x="0" y="0" width="257" height="113" fill="none" stroke="#1f1f1f" stroke-width="2" opacity=".75"/>
+    <line x1="0" y1="37" x2="257" y2="37" class="graphGrid"/>
+    <line x1="0" y1="75" x2="257" y2="75" class="graphGrid"/>
+    <line x1="64" y1="0" x2="64" y2="113" class="graphGrid"/>
+    <line x1="128" y1="0" x2="128" y2="113" class="graphGrid"/>
+    <line x1="193" y1="0" x2="193" y2="113" class="graphGrid"/>
+    <text x="-44" y="10" class="uiText small" opacity=".75">180 deg</text>
+    <text x="-40" y="64" class="uiText small" opacity=".75">90 deg</text>
+    <text x="-34" y="119" class="uiText small" opacity=".75">0 deg</text>
+    <text x="190" y="138" class="uiText small" opacity=".75">latest 10 s</text>
+    <line x1="49" y1="93" x2="257" y2="93" stroke="#46b36e" stroke-width="2" opacity=".65"/>
+    <path d="M48 113 C54 86,58 80,66 88 S78 98,92 93 S121 94,257 93" fill="none" stroke="#f12535" stroke-width="3"/>
+  </g>
+
+  <g transform="translate(868 76)">
+    <text x="74" y="14" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#202020">PID Pendulum Arm</text>
+    <g class="uiText">
+      <text x="0" y="38">P gain: 1.3</text>
+      <rect x="1" y="47" width="310" height="5" fill="#bfc6cf"/>
+      <rect x="1" y="47" width="16" height="19" fill="#1d1d1d"/>
+      <text x="0" y="81">I gain: 5.2</text>
+      <rect x="1" y="88" width="310" height="5" fill="#bfc6cf"/>
+      <rect x="1" y="84" width="88" height="18" fill="#2d70d6"/>
+      <rect x="73" y="78" width="15" height="34" fill="#1d1d1d"/>
+      <text x="0" y="123">D gain: 0.0</text>
+      <rect x="1" y="131" width="310" height="5" fill="#bfc6cf"/>
+      <rect x="1" y="117" width="13" height="36" fill="#1d1d1d"/>
+      <text x="0" y="164">Target angle : 30.0 deg</text>
+      <rect x="1" y="173" width="310" height="5" fill="#bfc6cf"/>
+      <rect x="1" y="169" width="46" height="18" fill="#2d70d6"/>
+      <rect x="43" y="158" width="14" height="34" fill="#1d1d1d"/>
+      <text x="0" y="207">Arm length: 2.00 m</text>
+      <rect x="1" y="216" width="310" height="5" fill="#bfc6cf"/>
+      <rect x="1" y="211" width="132" height="18" fill="#2d70d6"/>
+      <rect x="126" y="201" width="15" height="34" fill="#1d1d1d"/>
+      <text x="0" y="250">Arm mass: 1.00 kg</text>
+      <rect x="1" y="257" width="310" height="5" fill="#bfc6cf"/>
+      <rect x="1" y="253" width="55" height="18" fill="#2d70d6"/>
+      <rect x="56" y="244" width="15" height="34" fill="#1d1d1d"/>
+      <text x="0" y="292">Max torque: 100</text>
+      <rect x="1" y="300" width="310" height="5" fill="#bfc6cf"/>
+      <rect x="1" y="296" width="100" height="18" fill="#2d70d6"/>
+      <rect x="91" y="285" width="14" height="34" fill="#1d1d1d"/>
+      <text x="0" y="335">Damping: 0.30</text>
+      <rect x="1" y="342" width="310" height="5" fill="#bfc6cf"/>
+      <rect x="1" y="338" width="30" height="18" fill="#2d70d6"/>
+      <rect x="25" y="327" width="14" height="34" fill="#1d1d1d"/>
+    </g>
+    <rect x="1" y="360" width="151" height="137" fill="#275ca9"/>
+    <rect x="160" y="360" width="151" height="137" fill="#275ca9"/>
+    <text x="62" y="435" class="buttonText">Start</text>
+    <text x="214" y="435" class="buttonText">Reset</text>
+    <line x1="0" y1="502" x2="311" y2="502" stroke="#c5c5c5"/>
+    <g class="uiText small">
+      <text x="0" y="521">Current angle: 30.0 deg</text>
+      <text x="0" y="542">Error        : 0.0 deg</text>
+      <text x="0" y="563">Applied tq   : 4.9</text>
+      <text x="0" y="584">P term       : 0.0</text>
+      <text x="0" y="605">I term       : 4.9</text>
+      <text x="0" y="626">D term       : 0.0</text>
+      <text x="0" y="647">Overshoot: yes (10.9 deg)</text>
+      <text x="0" y="668">State: Converged (2.32 s)</text>
+    </g>
+  </g>
+</svg>

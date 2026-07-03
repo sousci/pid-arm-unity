@@ -1,3 +1,5 @@
+![PID Pendulum Arm simulation](docs/images/pid-arm-simulation.svg)
+
 # PID Arm Unity
 
 Unity 2D で作成した、1 自由度の単振り子型ロボットアームの PID 制御シミュレーションです。
