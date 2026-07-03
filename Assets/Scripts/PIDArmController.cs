@@ -11,6 +11,7 @@ public sealed class PIDArmController : MonoBehaviour
     public const float DefaultArmLength = 2f;
     public const float DefaultArmMass = 1f;
     public const float DefaultMaxTorque = 100f;
+    public const float DefaultDampingCoefficient = 0.3f;
 
     const float ArmWidth = 0.18f;
     const float IntegralLimit = 25f;
@@ -52,6 +53,7 @@ public sealed class PIDArmController : MonoBehaviour
     Text armLengthText;
     Text armMassText;
     Text maxTorqueText;
+    Text dampingCoefficientText;
     Text convergenceText;
     Text overshootText;
 
@@ -65,6 +67,7 @@ public sealed class PIDArmController : MonoBehaviour
     float armLength = DefaultArmLength;
     float armMass = DefaultArmMass;
     float maxTorque = DefaultMaxTorque;
+    float dampingCoefficient = DefaultDampingCoefficient;
 
     bool controlEnabled;
     bool hasConverged;
@@ -74,6 +77,7 @@ public sealed class PIDArmController : MonoBehaviour
     float pTerm;
     float iTerm;
     float dTerm;
+    float dampingTorque;
     float stableTime;
     float overshoot;
     float simulationStartTime;
@@ -109,6 +113,7 @@ public sealed class PIDArmController : MonoBehaviour
         Text armLengthValue,
         Text armMassValue,
         Text maxTorqueValue,
+        Text dampingCoefficientValue,
         Text convergence,
         Text overshootValue)
     {
@@ -140,6 +145,7 @@ public sealed class PIDArmController : MonoBehaviour
         armLengthText = armLengthValue;
         armMassText = armMassValue;
         maxTorqueText = maxTorqueValue;
+        dampingCoefficientText = dampingCoefficientValue;
         convergenceText = convergence;
         overshootText = overshootValue;
 
@@ -211,6 +217,7 @@ public sealed class PIDArmController : MonoBehaviour
         pTerm = 0f;
         iTerm = 0f;
         dTerm = 0f;
+        dampingTorque = 0f;
         stableTime = 0f;
         overshoot = 0f;
         hasConverged = false;
@@ -278,6 +285,11 @@ public sealed class PIDArmController : MonoBehaviour
         maxTorque = value;
     }
 
+    public void SetDampingCoefficient(float value)
+    {
+        dampingCoefficient = value;
+    }
+
     void ApplyPidTorque(float error)
     {
         float dt = Time.fixedDeltaTime;
@@ -290,7 +302,9 @@ public sealed class PIDArmController : MonoBehaviour
         iTerm = iGain * integral;
         dTerm = dGain * derivative;
 
-        outputTorque = Mathf.Clamp(pTerm + iTerm + dTerm, -maxTorque, maxTorque);
+        // Viscous damping is the friction source that makes the arm a damped second-order system.
+        dampingTorque = -dampingCoefficient * armBody.angularVelocity;
+        outputTorque = Mathf.Clamp(pTerm + iTerm + dTerm + dampingTorque, -maxTorque, maxTorque);
         armBody.AddTorque(outputTorque, ForceMode2D.Force);
 
         previousError = error;
@@ -378,7 +392,7 @@ public sealed class PIDArmController : MonoBehaviour
         SetText(currentAngleText, $"Current angle: {currentAngle,6:0.0} deg");
         SetText(targetAngleText, $"Target angle : {targetAngle,6:0.0} deg");
         SetText(errorText, $"Error        : {error,6:0.0} deg");
-        SetText(outputText, $"PID torque   : {outputTorque,6:0.0}");
+        SetText(outputText, $"Applied tq   : {outputTorque,6:0.0}");
         SetText(pTermText, $"P term       : {pTerm,6:0.0}");
         SetText(iTermText, $"I term       : {iTerm,6:0.0}");
         SetText(dTermText, $"D term       : {dTerm,6:0.0}");
@@ -388,6 +402,7 @@ public sealed class PIDArmController : MonoBehaviour
         SetText(armLengthText, $"Arm length: {armLength:0.00} m");
         SetText(armMassText, $"Arm mass: {armMass:0.00} kg");
         SetText(maxTorqueText, $"Max torque: {maxTorque:0}");
+        SetText(dampingCoefficientText, $"Damping: {dampingCoefficient:0.00}");
         SetText(overshootText, GetOvershootText());
         SetText(convergenceText, GetConvergenceText());
     }

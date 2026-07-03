@@ -130,6 +130,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
             ui.ArmLength,
             ui.ArmMass,
             ui.MaxTorque,
+            ui.DampingCoefficient,
             ui.Convergence,
             ui.Overshoot);
 
@@ -219,7 +220,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
 
         VerticalLayoutGroup layout = panel.AddComponent<VerticalLayoutGroup>();
         layout.padding = new RectOffset(14, 14, 12, 12);
-        layout.spacing = 7f;
+        layout.spacing = 5f;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
         layout.childForceExpandWidth = true;
@@ -235,6 +236,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         ui.LengthSlider = AddSliderRow(panel.transform, "Arm length", 0.5f, 4f, PIDArmController.DefaultArmLength, out ui.ArmLength);
         ui.MassSlider = AddSliderRow(panel.transform, "Arm mass", 0.1f, 5f, PIDArmController.DefaultArmMass, out ui.ArmMass);
         ui.MaxTorqueSlider = AddSliderRow(panel.transform, "Max torque", 10f, 300f, PIDArmController.DefaultMaxTorque, out ui.MaxTorque);
+        ui.DampingSlider = AddSliderRow(panel.transform, "Damping", 0f, 3f, PIDArmController.DefaultDampingCoefficient, out ui.DampingCoefficient);
 
         GameObject buttonRow = CreateHorizontalRow("Button Row", panel.transform, 40f);
         ui.StartButton = AddButton(buttonRow.transform, "Start");
@@ -243,7 +245,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         AddSeparator(panel.transform);
         ui.CurrentAngle = AddReadout(panel.transform, "Current angle: 0.0 deg");
         ui.Error = AddReadout(panel.transform, "Error        : 0.0 deg");
-        ui.Output = AddReadout(panel.transform, "PID torque   : 0.0");
+        ui.Output = AddReadout(panel.transform, "Applied tq   : 0.0");
         ui.PTerm = AddReadout(panel.transform, "P term       : 0.0");
         ui.ITerm = AddReadout(panel.transform, "I term       : 0.0");
         ui.DTerm = AddReadout(panel.transform, "D term       : 0.0");
@@ -262,6 +264,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         ui.LengthSlider.onValueChanged.AddListener(controller.SetArmLength);
         ui.MassSlider.onValueChanged.AddListener(controller.SetArmMass);
         ui.MaxTorqueSlider.onValueChanged.AddListener(controller.SetMaxTorque);
+        ui.DampingSlider.onValueChanged.AddListener(controller.SetDampingCoefficient);
         ui.StartButton.onClick.AddListener(controller.StartControl);
         ui.ResetButton.onClick.AddListener(controller.ResetSimulation);
 
@@ -272,6 +275,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         controller.SetArmLength(ui.LengthSlider.value);
         controller.SetArmMass(ui.MassSlider.value);
         controller.SetMaxTorque(ui.MaxTorqueSlider.value);
+        controller.SetDampingCoefficient(ui.DampingSlider.value);
     }
 
     void CreateBackgroundGuides()
@@ -369,10 +373,10 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
     {
         GameObject row = CreateUiObject(label + " Row", parent);
         LayoutElement rowLayout = row.AddComponent<LayoutElement>();
-        rowLayout.preferredHeight = 48f;
+        rowLayout.preferredHeight = 40f;
 
         VerticalLayoutGroup vertical = row.AddComponent<VerticalLayoutGroup>();
-        vertical.spacing = 3f;
+        vertical.spacing = 2f;
         vertical.childControlWidth = true;
         vertical.childControlHeight = true;
         vertical.childForceExpandWidth = true;
@@ -389,14 +393,14 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
 
         RectTransform sliderRect = sliderObject.GetComponent<RectTransform>();
         sliderRect.sizeDelta = new Vector2(0f, 22f);
-        sliderObject.AddComponent<LayoutElement>().preferredHeight = 22f;
+        sliderObject.AddComponent<LayoutElement>().preferredHeight = 18f;
 
         Image background = AddChildImage(sliderObject.transform, "Background", new Color(0.74f, 0.77f, 0.81f), new Vector2(0f, 0.35f), new Vector2(1f, 0.65f));
         Image fill = AddChildImage(sliderObject.transform, "Fill", new Color(0.18f, 0.42f, 0.82f), new Vector2(0f, 0.35f), new Vector2(1f, 0.65f));
         Image handle = AddChildImage(sliderObject.transform, "Handle", new Color(0.08f, 0.09f, 0.1f), new Vector2(0f, 0f), new Vector2(0f, 1f));
 
         RectTransform handleRect = handle.GetComponent<RectTransform>();
-        handleRect.sizeDelta = new Vector2(16f, 22f);
+        handleRect.sizeDelta = new Vector2(16f, 18f);
 
         slider.targetGraphic = handle;
         slider.fillRect = fill.rectTransform;
@@ -416,7 +420,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
 
         LayoutElement layout = buttonObject.AddComponent<LayoutElement>();
         layout.flexibleWidth = 1f;
-        layout.preferredHeight = 36f;
+        layout.preferredHeight = 32f;
 
         Text text = AddText(buttonObject.transform, label, 16, FontStyle.Bold, TextAnchor.MiddleCenter);
         text.color = Color.white;
@@ -429,14 +433,14 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         GameObject textObject = CreateUiObject(initialText, parent);
         Text text = textObject.AddComponent<Text>();
         text.font = uiFont;
-        text.fontSize = 13;
+        text.fontSize = 12;
         text.color = new Color(0.08f, 0.09f, 0.1f);
         text.alignment = TextAnchor.MiddleLeft;
         text.horizontalOverflow = HorizontalWrapMode.Overflow;
         text.verticalOverflow = VerticalWrapMode.Truncate;
 
         LayoutElement layout = textObject.AddComponent<LayoutElement>();
-        layout.preferredHeight = 20f;
+        layout.preferredHeight = 17f;
 
         text.text = initialText;
         return text;
@@ -445,10 +449,10 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
     void AddHeader(Transform parent, string text)
     {
         Text header = AddReadout(parent, text);
-        header.fontSize = 21;
+        header.fontSize = 20;
         header.fontStyle = FontStyle.Bold;
         header.alignment = TextAnchor.MiddleCenter;
-        header.GetComponent<LayoutElement>().preferredHeight = 32f;
+        header.GetComponent<LayoutElement>().preferredHeight = 28f;
     }
 
     void AddSeparator(Transform parent)
@@ -561,6 +565,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         public Slider LengthSlider;
         public Slider MassSlider;
         public Slider MaxTorqueSlider;
+        public Slider DampingSlider;
         public Button StartButton;
         public Button ResetButton;
         public Text CurrentAngle;
@@ -576,6 +581,7 @@ public sealed class PIDArmSceneBuilder : MonoBehaviour
         public Text ArmLength;
         public Text ArmMass;
         public Text MaxTorque;
+        public Text DampingCoefficient;
         public Text Convergence;
         public Text Overshoot;
     }
